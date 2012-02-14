@@ -1,0 +1,70 @@
+
+|************************************************************************
+|
+[IBIS ver]       3.2 
+[File name]      bug81.ibs
+[File Rev]       0
+[Date]           11/5/2003  
+[Source]         Bob Ross
+[Copyright]      None
+|
+|************************************************************************
+|                            Component bug81
+|************************************************************************
+|
+[Component]     bug81
+[Manufacturer]  None
+[Package]
+| variable       typ                min                max
+R_pkg            0.0m               0.0m               0.0m
+L_pkg            5.0nH              5.0nH              5.0nH
+C_pkg            2.0pF              2.0pF              2.0pf
+|
+[Pin]  signal_name   model_name   R_pin     L_pin    C_pin
+1     Output         BUG81
+|
+|************************************************************************
+|                               Model BUG81
+|************************************************************************
+|
+[Model]          BUG81
+Model_type       Output
+Vmeas = 1.5V
+Cref  = 12.5pF
+Rref  = 1Mohms
+Vref  = 0V
+C_comp           5pF           NA                  NA     
+|
+[Voltage Range]           5V      5V	5V
+|
+[Pulldown]
+| voltage     I(typ)              I(min)              I(max)
+| 
+-5 -100m NA NA
+-1e-6 0 NA NA    |****** This Voltage step too small
+0  0     NA NA
+10 200m  NA NA
+|
+[Pullup]
+| voltage     I(typ)              I(min)              I(max)
+| 
+-5 100m  NA NA
+10 -200m NA NA
+|
+|
+[Ramp]
+| variable       typ                 min                 max
+dV/dt_r        1.5/0.6n           NA NA
+dV/dt_f        1.5/0.6n           NA NA
+R_load = 50 
+|
+[Rising Waveform]
+R_fixture = 50 
+V_fixture = 5.0
+| time           V(typ)              V(min)              V(max)
+| 
+0.0n		2.5 NA NA
+1.0n		5.0 NA NA
+|
+|
+[End]

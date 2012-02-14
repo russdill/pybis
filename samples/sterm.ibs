@@ -1,0 +1,95 @@
+[IBIS Ver]       3.2
+[File Name]      sterm.ibs
+[File Rev]       0.3
+[Date]           June 25, 1998
+[Source]         Artifical Data
+[Notes]          This data is a sample, only.
+                 This file demonstrates Bus Hold functionality to create
+                 an ideal active 50 ohm internal pullup and pulldown
+                 terminator that is switched between ground and Vcc
+[Disclaimer]     This information is for modeling purposes and is not
+|                guaranteed.  
+[Copyright]      None - public sample
+|
+|**************************************************************************
+|                            Component SWITCHED-TERMINATOR-SAMPLE
+|**************************************************************************
+|
+[Component]      SWITCHED-TERMINATOR-SAMPLE
+[Manufacturer]   None 
+[Package]
+| variable       typ                 min                 max
+R_pkg            200m                100m                300m
+L_pkg            4.32nH              3.34nH              5.30nH
+C_pkg            0.38pF              0.33pF              0.43pF
+|
+|**************************************************************************
+|
+[Pin]  signal_name          model_name           R_pin     L_pin     C_pin
+|
+  1    Sample1              TOP_MODEL_TERM
+ 12    GND                  GND
+ 24    VCC                  POWER
+|
+|**************************************************************************
+|                             Model TOP_MODEL_TERM
+|**************************************************************************
+|
+[Model]             TOP_MODEL_TERM
+Model_type          Terminator
+|                   
+C_comp              0pF        0pF       0pF | Includes Submodel contribution
+|
+[Add Submodel]
+| Submodel          Submodel_mode
+SWITCH-TERM         All            | Could also use Non-Driving          
+|   
+|
+|                   typ        min       max
+[Voltage Range]     5.0        4.5       5.5
+|
+|**************************************************************************
+|                             Submodel SWITCH-TERM
+|**************************************************************************
+|
+| Example of a switched 50 ohm terminator using bus hold functionality:
+|
+[Submodel]       SWITCH-TERM
+Submodel_type    Bus_hold          | Bus_hold is used for this function
+|
+| Note, Submodels do not have C_comp
+|
+[Submodel Spec]
+|   Subparameter          typ        min        max
+|
+V_trigger_f               3.0        2.5        3.5  | Falling edge trigger
+V_trigger_r               2.0        1.5        2.5  | Rising edge trigger
+|
+|                         typ        min        max
+| [Voltage Range]           5.0        4.5        5.5
+| Note, the actual voltage range and reference voltages are inherited from
+| the top-level model.
+|
+[Pulldown]       | 50 ohm termination to ground 
+|
+-5V      -100mA    -100mA    -100mA
+0V         0         0         0
+10v       200mA     200mA     200mA
+|
+[Pullup]         | 50 ohm termination to Vcc
+|
+-5V       100mA     100mA     100mA
+0V         0         0         0
+10v      -200mA    -200mA    -200mA
+|
+|****************************************************************************
+|
+[Ramp]           | Used to switch the terminations above
+|                       typ             min             max
+dV/dt_r                 1.5/0.50n       1.35/0.75n      2.65/0.35n
+dV/dt_f                 1.5/0.50n       1.35/0.75n      2.65/0.35n
+R_load = 50
+|
+|****************************************************************************
+|
+[End]

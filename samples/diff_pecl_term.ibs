@@ -1,0 +1,181 @@
+[IBIS Ver]       3.2
+[File Name]      diff_pecl_term.ibs
+[File Rev]       0.1
+[Date]           December 22, 1998
+[Source]         Taken from a sample differential model
+[Notes]          This sample demonstrates an application of the BIRD56.1
+                 additional capability of using a series element as a
+                 differential terminator.
+
+                 It also demonstrates several other Version 3.2 IBIS
+                 features including:
+
+                   file name greater than 8 characters
+                   The [R Series] Series element
+                   Differential PECL Inputs and Outputs
+                   Use of a Series element as a differential terminator
+
+[Disclaimer]     This information is for modeling purposes and is not
+|                guaranteed.  
+|                WARNING: THIS MODEL HAS NOT BEEN CHECKED USING IBISCHK3
+|                WHICH IS UNDER DEVELOPMENT.  IT MAY CONTAIN SYNTAX ERRORS.
+[Copyright]      None - public sample
+|
+|**************************************************************************
+|                            Component DIFF_PECL_TERM
+|**************************************************************************
+|
+[Component]      DIFF_PECL_TERM
+[Manufacturer]   None
+[Package]
+| variable      typ             min             max
+R_pkg      	0.0m		NA		NA
+L_pkg      	3.0nH		NA		NA
+C_pkg      	1.0pF		NA		NA
+|
+|**************************************************************************
+|
+[Pin]  signal_name          model_name           R_pin     L_pin     C_pin
+|
+1      IN+                  PECL_DIFF_IN
+2      IN-                  PECL_DIFF_IN
+3      Q+                   PECL_DIFF_OUT
+4      Q-                   PECL_DIFF_OUT
+5      GND                  GND        
+6      VCC                  POWER
+|
+[Diff_Pin]   inv_pin	vdiff	tdelay_typ tdelay_min tdelay_max
+1       2	0.25	0	NA		NA
+3	4	0	0	NA		NA
+|
+|**************************************************************************
+|
+[Series Pin Mapping]  pin_2    model_name      function_table_group
+  1       2         R_SERIES_100
+  3       4         R_SERIES_100
+|
+|**************************************************************************
+|                             Model R_SERIES_100
+|**************************************************************************
+|
+[Model]             R_SERIES_100
+Model_type          Series
+|                   
+C_comp              0pF        0pF       0pF
+|
+|                   typ        min       max
+[Voltage Range]     5.0        4.5       5.5
+[R Series]          100        95        105
+|
+|****************************************************************************
+|                          PECL_DIFF_IN  MODEL
+|****************************************************************************
+|
+[Model]         PECL_DIFF_IN
+Model_type      Input_ECL
+Vinh = 3.87V
+Vinl = 3.52V
+|                       typ             min             max
+C_comp                  2.9pF           2.0pF           6.0pF
+|
+|****************************************************************************
+|
+|                       typ             min             max
+[Voltage Range]         5.0V            4.5V            5.5V
+[GND Clamp Reference]   0.0V            0.0V            0.0V
+|
+|****************************************************************************
+|
+[GND Clamp]
+|       Voltage         I(typ)          I(min)          I(max)
+|
+	-5  		-0.1169  	NA  		NA
+	-3  		-0.06151  	NA  		NA
+	-2  		-0.03356  	NA  		NA
+	-1  		-0.0051  	NA  		NA
+	-0.8  		-0.0005728 	NA  		NA
+	-0.6  		-2.043e-05  	NA  		NA
+	-0.4  		-1.33e-05  	NA  		NA
+	-0.2  		-6.652e-06  	NA  		NA
+	0  		0  		NA  		NA
+        5               0               NA              NA
+|
+[POWER Clamp]
+|       Voltage         I(typ)          I(min)          I(max)
+|
+	-0  		0  		NA  		NA
+	-0.2  		0.0004575  	NA  		NA
+	-0.4  		0.0006995  	NA  		NA
+	-0.6  		0.0009656  	NA  		NA
+	-0.8  		0.02575  	NA  		NA
+	-1  		1.054  		NA  		NA
+	-2  		10.46  		NA  		NA
+|
+|****************************************************************************
+|                          PECL_DIFF_OUT  MODEL
+|****************************************************************************
+|
+[Model]         PECL_DIFF_OUT            
+Model_type      Output_ECL  
+Polarity        Non-Inverting
+Vmeas = 3.71
+Rref = 50.0
+Cref = 0.0
+Vref = 3.0
+|                       typ             min             max
+C_comp                  2.9pF           2.0pF           8.0pF
+|
+|****************************************************************************
+|
+|                       typ             min             max
+[Voltage Range]         5.0V            4.5V            5.5V
+[Pulldown Reference]    5.0V            4.5V            5.5V
+[GND Clamp Reference]   0.0V            0.0V            0.0V
+|
+|****************************************************************************
+|
+[Pulldown]
+|       Voltage         I(typ)          I(min)          I(max)
+|
+	3  		-0.1784  	NA  		NA
+	2.8  		-0.1542  	NA  		NA
+	2.6  		-0.1283  	NA  		NA
+	2.4  		-0.09974  	NA  		NA
+	2.2  		-0.06772  	NA  		NA
+	2  		-0.03161  	NA  		NA
+	1.8  		-0.001643  	NA  		NA
+	1.7  		-4.412e-05  	NA  		NA
+	1.6  		-9.504e-07  	NA  		NA
+	1.5  		0	  	NA  		NA
+	0  		0  		NA  		NA
+|
+[Pullup]
+|       Voltage         I(typ)          I(min)          I(max)
+|
+	3  		-0.2515  	NA  		NA
+	2.8  		-0.2339  	NA  		NA
+	2.6  		-0.2163  	NA  		NA
+	2.4  		-0.1987  	NA  		NA
+	2.2  		-0.1809  	NA  		NA
+	2  		-0.1629 	NA  		NA
+	1.8  		-0.1444  	NA  		NA
+	1.6  		-0.1246  	NA  		NA
+	1.4  		-0.09973  	NA  		NA
+	1.2  		-0.06941  	NA  		NA
+	1  		-0.03504  	NA  		NA
+	0.8  		-0.003236  	NA  		NA
+	0.7  		-0.0001101  	NA  		NA
+	0.6  		-2.396e-06  	NA  		NA
+	0.5  		0	  	NA  		NA
+	0  		0  		NA  		NA
+|
+|****************************************************************************
+|
+[Ramp]
+|                       typ             min             max
+dV/dt_r                 1.5/0.33n       NA              NA
+dV/dt_f                 2.0/0.33n       NA              NA
+|
+|****************************************************************************
+|
+[End]

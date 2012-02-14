@@ -1,0 +1,71 @@
+
+[IBIS Ver]      3.2
+[File Name]     bug74.ibs
+[File Rev]      1.0
+[Date]          08/27/02
+[Source]        None.
+[Notes]         None.
+[Disclaimer]    None.
+[Copyright]     None.
+|
+[Component]     None.
+[Manufacturer]  None.
+[Package]
+|
+| variable              typ             min             max
+|
+R_pkg                   1.0m            NA              NA
+L_pkg                   0.01nH          NA              NA
+C_pkg                   0.01pF          NA              NA
+|
+[Pin]   signal_name     model_name      R_pin   L_pin   C_pin
+|
+  1     inout           bcmos           1.0m    0.01nH  0.01pF
+|-----------------------------------------------------------------------------
+
+| buf_io model definition
+|-----------------------------------------------------------------------------
+
+
+[Model]         bcmos
+Model_type      I/O
+Polarity        Non-Inverting
+Enable          Active-High
+Vinl  =         1.15V
+Vinh  =         1.35V
+
+| *** PROBLEM AREA:  standard load subparameters are missing.
+|Vmeas =         1.25V
+|Cref  =         10pF
+|Rref  =         1000
+|Vref  =         0
+| ***
+|                            typ            min            max
+|
+C_comp                       1.15pF         1.15pF         1.15pF
+[Temperature Range]          55.0           85.0           25.0
+[Voltage Range]              2.50V          2.375V         2.625V
+
+[Ramp]
+|                            typ            min            max
+|
+dV/dt_r                      0.836/0.405n   0.723/0.456n   0.958/0.358n
+dV/dt_f                      0.834/0.389n   0.744/0.470n   0.930/0.340n
+R_load = 50
+
+[Pulldown]
+|
+| voltage                    I(typ)         I(min)         I(max)
+|
+-1.0000e+00                 -5.0000e-01    -5.0000e-01    -5.0000e-01
+ 5.5511e-17                  0.0000e+00     0.0000e+00     0.0000e+00
+ 5.0000e+00                  5.0000e-01     5.0000e-01     5.0000e-01
+[Pullup]
+|
+| voltage                    I(typ)         I(min)         I(max)
+|
+-1.0000e+00                  5.0000e-01     5.0000e-01     5.0000e-01
+ 0.0000e+00                  0.0000e+00     6.1169e-06     7.5391e-06
+ 5.0000e+00                 -5.0000e-01    -5.0000e-01    -4.6674e-02
+|
+[End]

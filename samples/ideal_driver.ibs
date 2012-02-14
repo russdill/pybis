@@ -1,0 +1,91 @@
+|
+[IBIS Ver]       4.1
+[File Name]      ideal_driver.ibs
+[File Rev]       1.0
+[Date]           Aug 13, 2002
+[Source]         Mentor Graphics
+[Notes]          Syntax Sample Only, the IBIS Data does not correlate
+|                with the [External Model] Data
+|
+[Disclaimer]     Model not guaranteed. Example only.
+[Copyright]      None
+|**************************************************************
+[Component]      VHDL-AMS_EG
+[Manufacturer]   Sample
+[Package]
+| variable       typ                 min                 max
+R_pkg            67.00m              40.00m              85.00m
+L_pkg            7.00nH              3.40nH              11.20nH
+C_pkg            1.14pF              0.83pF              1.50pF
+|
+|
+[Pin]  signal_name          model_name          R_pin     L_pin     C_pin
+1      Sample_output        VHDLAMS-DRV         65.00m    4.50nH    0.85pF
+|
+|************************************************************************
+|                              Model VHDLAMS-DRV
+|************************************************************************
+|
+[Model]          VHDLAMS-DRV
+Model_type       Output
+Polarity         Non-Inverting
+C_comp           4.60pF              3.50pF              6.00pF
+Vmeas = 1.15V
+Cref  = 1pF
+Rref  = 50ohms
+Vref  = 0V
+|
+[External Model]
+Language VHDL-AMS
+|
+| Corner corner_name file_name          circuit_name entity(architecture)
+Corner   Typ         ideal_driver.vhd   driver_ideal(linear)
+Corner   Min         ideal_driver.vhd   driver_ideal(linear)
+Corner   Max         ideal_driver.vhd   driver_ideal(linear)
+|
+| Ports List of port names (in same order as in VHDL-AMS)
+Ports D_drive A_puref A_pdref A_signal
+|
+[End External Model]
+|
+|
+[Temperature Range]       27.00               70.00               0.000
+[Voltage Range]           3.30V               3.13V               3.46V
+|
+|
+| Note, for this simple example the IBIS electrical content
+| is shown for illustration.  It does not correspond to the linear
+| driver external model.  Many lines are deleted.
+|
+[Pulldown]
+| voltage     I(typ)              I(min)              I(max)
+|
+  -3.30       -0.46A              -0.47A              -0.45A
+  -3.10       -0.42A              -0.43A              -0.42A
+|
+| ...
+|
+   3.60        0.15A               0.12A               0.17A
+   6.60        0.15A               0.12A               0.17A
+| voltage     I(typ)              I(min)              I(max)
+[Pullup]
+|
+  -3.30        0.43A               0.44A               0.43A
+  -3.10        0.40A               0.41A               0.39A
+|
+| ...
+|
+   3.60       -0.15A              -0.10A              -0.20A
+   6.60       -0.15A              -0.10A              -0.21A
+|
+[Ramp]
+| variable       typ                 min                 max
+dV/dt_r          1.54/0.28n          1.38/0.42n          1.67/0.20n
+dV/dt_f          1.61/0.30n          1.48/0.39n          1.72/0.25n
+R_load = 50.00
+|
+| ...  Waveform Table Data Deleted
+|
+| End [Model] VHDLAMS-DRV
+|
+[End]

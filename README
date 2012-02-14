@@ -1,0 +1,324 @@
+=================================
+PyBIS -- Python based IBIS parser
+=================================
+
+Introduction
+============
+
+This module contains a python based IBIS parser. The latest IBIS specification
+can be found here:
+
+    http://eda.org/pub/ibis/ver5.0/ver5_0.txt
+
+Parsing an IBIS file can be accomplished as follows:
+
+    import pybis
+    results = pybis.IBSParser().parse('test.ibs')
+    print results.header.file_rev
+
+The additional parsers 'PKGParser' and 'EBDParser' are available for parsing
+'.pkg' and '.ebd' files respectively.
+
+Handling Parse Results
+======================
+
+Parse results are return as a tree of 'IBISNode' objects. An 'IBISNode' object
+is a python dict. Each key/value pair represents a section, keyword, or param.
+Each value can be a:
+
+    - IBISNode
+    - Range
+    - list
+    - dict
+    - numpy matrix
+    - string
+    - float
+    - int
+    - None
+
+In the case of a dict or list, the children can be any of the above except dict
+and list.
+
+Children of an IBISNode can be accessed through the standard dict accessors as
+well as with the python attribute accessors. Additionally, any accesses are
+case insensitive and allow the use of a '_' in place of ' ' or '/', 'p' in
+place of '+', and 'n' in place of '-':
+
+    results.model["SSTL18"].model_spec.vinlp
+    results.MODEL["SSTL18"].Model_Spec["Vinl+"]
+    results["Model"]["SSTL18"]["Model Spec"].Vinlp
+
+Objects represented by dict values, such as the set of components, do not have
+this property.
+
+If the specification indicates that a certain keyword is required in certain
+circumstances or defaults to a certain value, the parser will ensure that
+condition is met. For optional keywords, and if block or try/except block can
+be used:
+
+    if 'Copyright' in results.header:
+        print results.header.copyright
+    else:
+        print 'Not specified'
+
+    try:
+        print results.header["Copyright"]
+    except:
+        print 'Not specified'
+
+    print result.header.get('Copyright', 'Not specified')
+
+A 'Range' type represents a typ/min/max set. It can be accessed through the
+following methods:
+
+    [0-2] -                  Return raw values (0 = typ, 1 = min, 2 = max).
+    (0-2) -                  Return typ for min or max if they are 'None'.
+    (0-2, invert=False) -    Ensure max > min.
+    (0-2, invert=True) -     Ensure mix > max.
+    .typ, .min, .max -       Easy accessors for (0-2).
+    .norm -                  Return version of object where max > min.
+    .inv -                   return version of object where min > max.
+
+A keyword such as 'Pin', 'Pin Mapping', or 'Pin EMI' that names columns, is
+stored as a dict of IBISNode's indexed by the key in the first column. The
+column names are the keys of the IBISNode's. This is also true of sections
+that implicitly name columns such as 'Driver Schedule'.
+
+Keywords that represent waveforms or I-V curves such as 'Pulldown', 'GND
+Clamp', and 'Rising Waveform' are stored as a 'Range' object. Each item in the
+Range object is an x, y tuple who's members are a list of floats.
+
+'NA' and 'NC' entries are stored as None.
+
+'[End...]' keywords are not stored.
+
+Parse Results - Section 4 - File Header Information
+===================================================
+
+Keywords within the file header are stored in a "fake" section called "header".
+Multiple occurrences of multi-line sections, such as 'Source' and 'Copyright'
+are merged together. The 'Comment Char' keyword does not appear in parse
+output.
+
+    print results.header["File Name"]
+
+Parse Results - Section 5 - Component Description
+=================================================
+
+Components are stored as a dict within the 'Component' keyword with each key
+representing a component name, and each value representing a component.
+
+Items in the 'Series Pin Mapping' keyword are indexed by the tuple (pin_1,
+pin_2).
+
+'Series Switch Groups' are just stored as a list of lists, which each list
+starting with the keyword 'on' or 'off'.
+
+Parse Results - Section 6 - Model Statement
+===========================================
+
+Models are stored as a dict within the 'Model' keyword with each key
+representing a model name, and each value representing a model.
+
+Drain model types are deprecated and replaced by the parser with the associated
+sink type.
+
+The 'Rising Waveform' and 'Falling Waveform' sections are stored as a list
+of sections. Because the section contains multiple keywords along with waveform
+data, the waveform data is stored under the keyword 'waveform'. Additionally,
+the keywords 'V_fixture_min' and 'V_fixture_max' are combined with the
+'V_fixture' keyword to create a Range.
+
+'Series MOSFET' I-V tables are indexed by their 'Vds' value.
+
+'Test Data' and 'Test Load' are handled the same way as 'Model' and 'Component'
+keywords.
+
+Parse Results - Section 6a - Add Submodel Description
+=====================================================
+
+'Submodel' keywords are handling in a similar way to 'Model' keywords.
+
+Parse Results - Section 6b - Multi-lingual Model Extensions
+===========================================================
+
+Multi-lingual extensions are supported as additional keywords under the
+'Component' and 'Model' keywords as well as the additional top level 'External
+Circuit' keyword.
+
+The data under the 'Corner' keyword is reorganized so that the 'file_name'
+keyword and 'circuit_name' keyword under 'Corner' each contain a Range object.
+
+The 'D_to_A' and 'A_to_D' keywords are stored as dict's indexed by 'd_port'.
+Additionally, each parameter is stored as a Range object.
+
+'Portmap' keywords are stored as dict's indexed by 'port'.
+
+Parse Results - Section 6c - Algorithmic Modeling Interface (AMI)
+=================================================================
+
+The 'Algorithmic Model' keyword is supported under the 'Model' keyword.
+Although parsing of the keyword supported, pybis does not at this time parse
+AMI files.
+
+Parse Results - Section 7 - Package Modeling
+============================================
+
+The matrices in 'Model Data' are stored as as a numpy matrix. A keyword, 'Pin
+Mapping', is added to 'Model Data' that provides a mapping from pin name to
+numpy matrix index.
+
+The parser insures that a 'Package Model' contains either 'Model Data' or
+section data associated with pins, but not both. In either case, 'Pin Numbers'
+is stored as a dict indexed by pin name. In the 'Model Data' case, the value
+for each pin is 'None'. In the sections case, the value for each pin is a list
+of stubs. A stub can either be a 'Len', 'R', 'L', 'C' IBISNode, or it can be a
+list of stubs in the case of a fork.
+
+Parse Results - Section 8 - Electrical Board Description
+========================================================
+
+The 'Path Description' section under a 'Begin Board Description' keyword is
+stored as a list. Each element in the list can be an IBISNode containing 'Pin',
+'Node', or 'Len'. If the IBISNode contains 'Len' it is a stub and may also
+contain 'L', 'R', and/or 'C'. An element in the list can also be a list, which
+indicates a fork.
+
+Parse Results - Section 11 - EMI Parameters
+===========================================
+
+Extra EMI keywords are supported under the 'Component' and 'Model' keywords.
+
+Parse Errors
+============
+
+Parse errors throw an Exception along with a parse tree backtrace, which due to
+the immaturity of the parser, often does not return helpful data:
+
+    In 'body ' , 'Model BPS2P10F_PU50K' :
+    Parsing failed on line 2144: 'Ref                    = 1Mohms'
+    Traceback (most recent call last):
+      File "pybis.py", line 2148, in <module>
+        root = parser.parse(open(sys.argv[1], 'rb'))
+      File "pybis.py", line 2019, in parse
+        self.parseLine(line)
+      File "pybis.py", line 2090, in parseLine
+        self.current.parser.fin(self.current)
+      File "pybis.py", line 1366, in fin
+        .format(model_type, keyword))
+    Exception: Type 'i/o' missing required keyword 'Ramp'
+
+In the above backtrace, the error listed is:
+
+    Type 'i/o' missing required keyword 'Ramp'
+
+However, the cause of the error is a misspelling of the 'Rref' keyword. This is
+because upon encountering and unknown keyword in a section, the parser assumes
+the keyword is contained in a higher level section and so closes the section.
+The close function of the section notices that the 'Ramp' keyword is missing
+and throws an exception.
+
+Most parse errors will occur when sections are closed. The line number given in
+this case will be the line number that cause the section to be closed:
+
+    In 'body ' , 'Model BPS2P10F_PU50K' :
+    Parsing failed on line 2785: '[Model]             BPS2P4F_PD50K'
+    Traceback (most recent call last):
+      File "pybis.py", line 2148, in <module>
+        root = parser.parse(open(sys.argv[1], 'rb'))
+      File "pybis.py", line 2019, in parse
+        self.parseLine(line)
+      File "pybis.py", line 2090, in parseLine
+        self.current.parser.fin(self.current)
+      File "pybis.py", line 1366, in fin
+        .format(model_type, keyword))
+    Exception: Type 'i/o' missing required keyword 'C_comp'
+
+In this case the Exception is correct, but the line number is misleading. In
+both cases, the first line of the backtrace (starting with 'In') can be used to
+locate the error.
+
+Performance
+===========
+
+Performance of PyBIS is slower than the golden parser (ibischk5) by a factor of
+10. Although this is unfortunate, the performance should still be acceptable
+for many workloads.
+
+# of lines | ibischk5 | pybis    | factor
+79178        0m0.394s   0m3.438s   8.7
+9624         0m0.056s   0m0.539s   9.6
+
+Compatibility
+=============
+
+Because the IBIS specification is somewhat vague, the definition of what is or
+is not a valid IBIS file is typically defined by what can pass though the
+golden parser (ibischk5).
+
+Because of this, the highest priority of PyBIS is to accept any files accepted
+without errors by ibischk5. A secondary goal is to emit any valid errors or
+warnings that the golden parser emits.
+
+Example Code
+============
+
+Example code is included in examples/, which currently consists of models.py.
+Given an IBIS file as an argument, models.py will list the models contained in
+the IBIS file:
+
+    ./models.py sample1.ibs
+    BIP00F input
+    BIPIN15F input
+    BPIN15F_PU50K input
+    BPIST02F input
+    BPIST02F_PU50K input
+    BPOZ2F 3-state
+    BPOZ4F 3-state
+    BPS2P10F_PU50K i/o
+    BPS2P4F_PD50K i/o
+    BPS2P4F_PU50K i/o
+    BT2Z50CX i/o
+    BT2Z50CX_PU50K i/o
+    BUSB6AU_HIGH_SPEED i/o
+    BUSB6AU_LOW_SPEED i/o
+
+Selecting a model then displays the Time based and I-V curves of that model:
+
+    ./models.py sample1.ibs BPOZ2F
+    (scipy plots are displayed)
+
+Sample Data
+===========
+
+Some sample IBIS files have been collected and are present in samples/.
+
+Installation
+============
+
+Do the usual:
+
+    python setup.py install
+
+Future Changes
+==============
+
+In the long term, it is desired that PyBIS will expand into a suite of python
+based IBIS tools. In the short term, the parser requires incremental changes.
+Some of the areas that need improvement are:
+
+    - Improved error messages.
+    - Warning messages.
+    - Improved compatibility.
+    - Performance improvements.
+    - Line numbers in parse results.
+    - Cleaned up code base.
+    - Additional IBIS samples including code test cases.
+
+Some possible future feature ideas include:
+
+    - AMI parsing.
+    - IBIS version handling.
+    - Folding together of newer and older IBIS fields and features in parse
+      output. For example, Vinl appears in 3 different keywords.
+    - A GUI based IBIS file viewer/browser.

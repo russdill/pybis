@@ -1,0 +1,154 @@
+[IBIS Ver]       3.2
+[File Name]      bushold.ibs
+[File Rev]       0.2
+[Date]           June 24, 1998
+[Source]         Artifical Data
+[Notes]          This data is a sample, only.
+|                This file demonstrates Bus Hold functionality.
+[Disclaimer]     This information is for modeling purposes and is not
+|                guaranteed.  
+[Copyright]      None - public sample
+|
+|**************************************************************************
+|                            Component BUS-HOLD-SAMPLE
+|**************************************************************************
+|
+[Component]      BUS-HOLD-SAMPLE
+[Manufacturer]   None 
+[Package]
+| variable       typ                 min                 max
+R_pkg            200m                100m                300m
+L_pkg            4.32nH              3.34nH              5.30nH
+C_pkg            0.38pF              0.33pF              0.43pF
+|
+|**************************************************************************
+|
+[Pin]  signal_name          model_name           R_pin     L_pin     C_pin
+|
+  1    Sample1              TOP_MODEL_BUS_HOLD
+ 12    GND                  GND
+ 24    VCC                  POWER
+|
+|**************************************************************************
+|                             Model TOP_MODEL_BUS_HOLD
+|**************************************************************************
+|
+[Model]             TOP_MODEL_BUS_HOLD
+Model_type          Input
+Vinh = 2.0
+Vinl = 0.8
+|                   
+C_comp              4pF        3pF       5pF | Includes Submodel contribution
+|
+[Add Submodel]
+| Submodel          Submodel_mode
+BUS_HOLD            All            | Could also use Non-Driving          
+|   
+|
+|                   typ        min       max
+[Voltage Range]     5.0        4.5       5.5
+|
+[GND Clamp]
+|
+-2.0000e+00        -6.158e+17  NA        NA
+-1.9000e+00        -1.697e+16  NA        NA
+-1.8000e+00        -4.679e+14  NA        NA
+-1.7000e+00        -1.290e+13  NA        NA
+-1.6000e+00        -3.556e+11  NA        NA
+-1.5000e+00        -9.802e+09  NA        NA
+-1.4000e+00        -2.702e+08  NA        NA
+-1.3000e+00        -7.449e+06  NA        NA
+-1.2000e+00        -2.053e+05  NA        NA
+-1.1000e+00        -5.660e+03  NA        NA
+-1.0000e+00        -1.560e+02  NA        NA
+-9.0000e-01        -4.308e+00  NA        NA
+-8.0000e-01        -1.221e-01  NA        NA
+-7.0000e-01        -4.315e-03  NA        NA
+-6.0000e-01        -1.715e-04  NA        NA
+-5.0000e-01        -4.959e-06  NA        NA
+-4.0000e-01        -1.373e-07  NA        NA
+-3.0000e-01        -4.075e-09  NA        NA
+-2.0000e-01        -3.044e-10  NA        NA
+-1.0000e-01        -1.030e-10  NA        NA
+   0.               0          NA        NA
+   5                0          NA        NA
+|
+[POWER Clamp]
+|
+-2.0000e+00         6.158e+17  NA        NA
+-1.9000e+00         1.697e+16  NA        NA
+-1.8000e+00         4.679e+14  NA        NA
+-1.7000e+00         1.290e+13  NA        NA
+-1.6000e+00         3.556e+11  NA        NA
+-1.5000e+00         9.802e+09  NA        NA
+-1.4000e+00         2.702e+08  NA        NA
+-1.3000e+00         7.449e+06  NA        NA
+-1.2000e+00         2.053e+05  NA        NA
+-1.1000e+00         5.660e+03  NA        NA
+-1.0000e+00         1.560e+02  NA        NA
+-9.0000e-01         4.308e+00  NA        NA
+-8.0000e-01         1.221e-01  NA        NA
+-7.0000e-01         4.315e-03  NA        NA
+-6.0000e-01         1.715e-04  NA        NA
+-5.0000e-01         4.959e-06  NA        NA
+-4.0000e-01         1.373e-07  NA        NA
+-3.0000e-01         4.075e-09  NA        NA
+-2.0000e-01         3.044e-10  NA        NA
+-1.0000e-01         1.030e-10  NA        NA
+   0.               0          NA        NA
+   5                0          NA        NA
+|
+|
+|**************************************************************************
+|                             Submodel BUS_HOLD
+|**************************************************************************
+|
+| Example of bus hold Model added to existing GND and POWER clamps:
+|
+[Submodel]       BUS_HOLD
+Submodel_type    Bus_hold
+|
+| Note, Submodels do not have C_comp
+|
+[Submodel Spec]
+|   Subparameter          typ        min        max
+|
+V_trigger_f               1.3        1.2        1.4  | Falling edge trigger
+V_trigger_r               3.1        2.6        4.6  | Rising edge trigger
+|
+|                         typ        min        max
+| [Voltage Range]           5.0        4.5        5.5
+| Note, the actual voltage range and reference voltages are inherited from
+| the top-level model.
+|
+[Pulldown]   
+|
+-5V     -100uA     -80uA     -120uA
+-1V      -30uA     -25uA     -40uA
+0V       0           0         0
+1V       30uA       25uA     40uA
+3V       50uA       45uA     50uA
+5V       100uA      80uA     120uA
+10v      120uA      90uA    150uA
+|
+[Pullup]
+|
+-5V      100uA      80uA     120uA
+-1V      30uA       25uA     40uA
+0V       0           0         0
+1V       -30uA      -25uA    -40uA
+3V       -50uA      -45uA    -50uA
+5V       -100uA     -80uA    -120uA
+10v      -120uA     -90uA    -150uA
+|
+|****************************************************************************
+|
+[Ramp]
+|                       typ             min             max
+dV/dt_r                 2.0/0.50n       2.0/0.75n       2.0/0.35n
+dV/dt_f                 2.0/0.50n       2.0/0.75n       2.0/0.35n
+R_load = 500
+|
+|****************************************************************************
+|
+[End]
