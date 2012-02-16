@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name = 'pybis',
-    version = '0.9',
+    version = '0.10',
     description = 'Python IBIS parser',
     author = 'Russ Dill',
     requires = [ 'pyparsing', 'numpy' ],
