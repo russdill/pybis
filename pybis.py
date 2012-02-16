@@ -2028,6 +2028,8 @@ class Parser(object):
         while True:
             line = input_file.readline()
             if line == "": # EOF
+		if self.current:
+                    raise Exception("No [End] keyword")
                 return self.root_node.children
             try:
                 self.parseLine(line)
@@ -2036,8 +2038,6 @@ class Parser(object):
                 print "Parsing failed on line {}: '{}'".format(num, line.rstrip())
                 raise
             num += 1
-
-        raise Exception("No [End] keyword")
 
     def backtrace(self):
         objs = []
