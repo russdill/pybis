@@ -71,9 +71,11 @@ for component_name, component in ibs.component.iteritems():
     print "--vmode"
 
     print "[labels]"
+    print component_name
     print "refdes=U?"
-    print "device=" + component_name
-    print "manufacturer=" + component.manufacturer
+    print component.manufacturer
+    print "! device=" + component_name
+    print "! manufacturer=" + component.manufacturer
 
     # Reduce all numbers in a name down to ' ', this allows us to detect
     # busses.
