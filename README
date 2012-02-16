@@ -263,9 +263,10 @@ warnings that the golden parser emits.
 Example Code
 ============
 
-Example code is included in examples/, which currently consists of models.py.
-Given an IBIS file as an argument, models.py will list the models contained in
-the IBIS file:
+Example code is included in examples/.
+
+models.py - Given an IBIS file as an argument, list the models contained in the
+IBIS file:
 
     ./models.py sample1.ibs
     BIP00F input
@@ -287,6 +288,13 @@ Selecting a model then displays the Time based and I-V curves of that model:
 
     ./models.py sample1.ibs BPOZ2F
     (scipy plots are displayed)
+
+ibs2symdef.py - Convert the components in an IBIS file to a djboxsym symdef
+file:
+
+http://www.gedasymbols.org/user/dj_delorie/tools/djboxsym.html
+
+This uses model information to intelligently place pins.
 
 Sample Data
 ===========

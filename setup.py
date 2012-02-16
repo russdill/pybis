@@ -11,7 +11,7 @@ setup(name = 'pybis',
     url = 'https://github.com/russdill/pybis/wiki',
     download_url = 'https://github.com/russdill/pybis',
     py_modules = [ 'pybis' ],
-    scripts = [ 'examples/models.py' ],
+    scripts = [ 'examples/models.py', 'examples/ibs2symdef.py' ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
