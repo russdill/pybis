@@ -1300,15 +1300,15 @@ class Model(BaseModel):
                         .format(model_type, submodel_name, mode))
 
         if "Model Spec" in node.children:
-            for level in [ "low", "high" ]
-                if "D_overshoot_" + level in node.childern.model_spec:
-                    if "S_overshoot_" + level not in node.childern.model_spec:
+            for level in [ "low", "high" ]:
+                if "D_overshoot_" + level in node.children.model_spec:
+                    if "S_overshoot_" + level not in node.children.model_spec:
                         raise Exception("D_overshoot_{} requires S_overshoot_{}"
                             .format(level, level))
-                    if "D_overshoot_time" not in node.childern.model_spec:
+                    if "D_overshoot_time" not in node.children.model_spec:
                         raise Exception("D_overshoot_{} requires D_overshoot_time"
                             .format(level))
-                if "D_overshoot_area_" + level[0] in node.childern:
+                if "D_overshoot_area_" + level[0] in node.children:
                     if "D_overshoot_ampl_" + level[0] not in node.chidren:
                         raise Exception("D_overshoot_area_{} requires D_overshoot_ampl_{}"
                             .format(level[0], level[0]))
