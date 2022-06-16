@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  models.py - Display waveform data from IBIS file.
 #
@@ -25,8 +25,8 @@ try:
 
 except:
     # If they didn't supply a model or the model wasn't found, print a list.
-    for name, model in output.model.iteritems():
-        print name, model.model_type
+    for name, model in output.model.items():
+        print(name, model.model_type)
     exit()
 
 # Name the plot after the model

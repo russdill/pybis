@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #  ibs2symdef.py - Generate symdef files from IBIS.
 #
@@ -17,9 +17,10 @@
 import sys
 import pybis
 import re 
+from functools import reduce
 
 ibs = pybis.IBSParser().parse(sys.argv[1])
-for component_name, component in ibs.component.iteritems():
+for component_name, component in ibs.component.items():
 
     # Sort pins into groups.
     groups = dict((s, dict()) for s in ["power", "gnd", "input", "output", "io", "nc", "other"])
@@ -28,7 +29,7 @@ for component_name, component in ibs.component.iteritems():
     has_inv = dict()
     is_inv = set()
 
-    for pin_name, pin in component.pin.iteritems():
+    for pin_name, pin in component.pin.items():
 
         if pin.model_name is None:
             group = "nc"
@@ -41,7 +42,7 @@ for component_name, component in ibs.component.iteritems():
             model_name = pin.model_name
             if model_name not in ibs.model:
                 # If there is a model selector, just pick the first one.
-                model_name = ibs.model_selector[model_name].keys()[0]
+                model_name = list(ibs.model_selector[model_name].keys())[0]
             model = ibs.model[model_name]
 
             if "input" in model.model_type:
@@ -65,17 +66,17 @@ for component_name, component in ibs.component.iteritems():
         # that signal_name.
         groups[group].setdefault(pin.signal_name, list()).append(pin_name)
 
-    sys.stdout = open(component_name + '.symdef', 'wb')
+    sys.stdout = open(component_name + '.symdef', 'w', encoding='utf-8')
 
     # vmode makes the signal names across the top and bottom vertical.
-    print "--vmode"
+    print("--vmode")
 
-    print "[labels]"
-    print component_name
-    print "refdes=U?"
-    print component.manufacturer
-    print "! device=" + component_name
-    print "! manufacturer=" + component.manufacturer
+    print("[labels]")
+    print(component_name)
+    print("refdes=U?")
+    print(component.manufacturer)
+    print("! device=" + component_name)
+    print("! manufacturer=" + component.manufacturer)
 
     # Reduce all numbers in a name down to ' ', this allows us to detect
     # busses.
@@ -103,7 +104,7 @@ for component_name, component in ibs.component.iteritems():
             # current signal name (ignoring numbers), end the bus.
             if bus and trs[i] != trs[i - 1]:
                 bus = False
-                print
+                print()
 
             # If we aren't on a bus, check if we should be.
             if not bus:
@@ -111,46 +112,46 @@ for component_name, component in ibs.component.iteritems():
                 # negative diff pins), we consider it a bus.
                 if reduce(lambda x, y: x + (y not in is_inv), pins, 0) > 1:
                     bus = True
-                    print ".bus"
+                    print(".bus")
                 # If the current signal name matches the next signal name, we
                 # start a bus.
                 elif i + 1 < len(trs) and trs[i] == trs[i + 1]:
                     bus = True
-                    print ".bus"
+                    print(".bus")
 
             # Attempt a "heuristic" for inverted pins.
             mod = '!' if signal_name[-1] == '#' else ''
 
             # For all pins with this signal name except for neg side diff.
-            for pin in filter(lambda x: x not in is_inv, pins):
+            for pin in [x for x in pins if x not in is_inv]:
                 # If this is a pos side diff, make it a bus with its neg.
                 if pin in has_inv:
-                    print ".bus"
-                print pin, mod, signal_name
+                    print(".bus")
+                print(pin, mod, signal_name)
                 if pin in has_inv:
                     inv_name = has_inv[pin]
-                    print inv_name, '!', component.pin[inv_name].signal_name
-                    print
+                    print(inv_name, '!', component.pin[inv_name].signal_name)
+                    print()
 
-    print
-    print "[left]"
+    print()
+    print("[left]")
     dump_pins(groups["input"])
     dump_pins(groups["other"])
 
-    print
-    print "[right]"
+    print()
+    print("[right]")
     dump_pins(groups["output"])
     dump_pins(groups["io"])
 
-    print
-    print "[top]"
+    print()
+    print("[top]")
     dump_pins(groups["power"])
 
-    print
-    print "[bottom]"
+    print()
+    print("[bottom]")
     dump_pins(groups["gnd"])
 
-    print
-    print "[nc]"
+    print()
+    print("[nc]")
     dump_pins(groups["nc"])
 

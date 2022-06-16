@@ -16,7 +16,6 @@ import sys
 import math
 import copy
 import re
-from string import maketrans
 from pyparsing import alphanums, alphas, CaselessKeyword, Dict, Each, Forward, Group, LineStart, LineEnd, Literal, NotAny, oneOf, Optional, ParseException, ParserElement, ParseResults, printables, restOfLine, Token, Suppress, Word
 from collections import OrderedDict
 from numpy import zeros
@@ -52,6 +51,7 @@ def in_range(lower, upper):
 positive = in_range(0, float("inf"))
 
 class Real(Token):
+    name = 'Real'
     """pyparse a Real."""
     def __init__(self, check=lambda f: f):
         super(Real, self).__init__()
@@ -191,7 +191,7 @@ class IBISNode(OrderedDict):
        In addition to normal dict() accessors, '__getattribute__' can also be
        used. For example, 'obj["Vinl+"] and obj.vinlp both work.
     """
-    ibis_trans = maketrans('+- /', 'pn__')
+    ibis_trans = str.maketrans('+- /', 'pn__')
 
     def __init__(self, *args, **kwds):
         object.__setattr__(self, 'pretty_names', dict())
@@ -319,7 +319,7 @@ class Parse(object):
 
     def find_parser(self, text):
         """Find a child parser that can parse 'text'."""
-        for name, child in self.children.iteritems():
+        for name, child in self.children.items():
             if child.can_parse(text):
                 return child
         if self.get_globals() is not None:
@@ -338,7 +338,7 @@ class Parse(object):
         if self.initvalue is not None and self.default is None:
             # FIXME: Maybe we can shortcut merge here...
             node.data = copy.deepcopy(self.initvalue)
-        for key, parser in self.children.iteritems():
+        for key, parser in self.children.items():
             if parser.default is not None:
                 node.children[key] = copy.deepcopy(parser.default)
         return node
@@ -366,7 +366,7 @@ class Parse(object):
             if self.data_name: 
                 node.children[self.data_name] = node.data
 
-        for name, p in self.children.iteritems():
+        for name, p in self.children.items():
             if p.required and not name in node.children:
                 raise Exception("'{}' is missing required '{}'".format(self.key, name))
 
@@ -382,7 +382,7 @@ class Parse(object):
         """Remove 'name' from ParseResults 'new'."""
         ret = new.data[name]
         del new.data[name]
-        if len(new.data.keys()) == 0:
+        if len(list(new.data.keys())) == 0:
             for i, item in enumerate(new.data.asList()):
                 if item == ret:
                     del new.data[i]
@@ -396,6 +396,8 @@ class Parse(object):
                 new.data = new.data.asList()
             elif self.asDict:
                 new.data = IBISNode(new.data.asDict())
+            elif not len(new.data):
+                new.data = None
             else:
                 new.data = new.data[0]
 
@@ -594,7 +596,7 @@ class TableSection(Section):
             return True
 
         row = IBISNode(zip(node.keys, tokens[1:]))
-        for name, parser in self.parsers.iteritems():
+        for name, parser in self.parsers.items():
             name = name.lower()
             if name in row:
                 tmp = Node()
@@ -712,7 +714,7 @@ class MatrixSection(Section):
 
     def fin(self, node):
         try:
-            pn = node.parent.parent.children.pin_numbers.keys()
+            pn = list(node.parent.parent.children.pin_numbers.keys())
         except:
             raise Exception("Could not find associated [Pin Numbers] section")
     
@@ -733,7 +735,7 @@ class MatrixSection(Section):
         node.data = zeros([len(pm), len(pm)])
         node.sectionText = node.sectionText.lower()
 
-        for row, data in node.children.row.iteritems():
+        for row, data in node.children.row.items():
             try:
                 r = pm[row]
             except KeyError:
@@ -950,7 +952,7 @@ class Component(Section):
 
         # NB: Even though 'POWER', 'GND', and 'NC' are 'reserverd words' and
         # therefore case sensitive, the golden parser doesn't care.
-        for name, pin in node.children.pin.iteritems():
+        for name, pin in node.children.pin.items():
             if pin.model_name.upper() in [ "POWER", "GND", "NC", "CIRCUITCALL" ]:
                 pin.model_name = pin.model_name.upper()
             if pin.model_name == "NC":
@@ -964,7 +966,7 @@ class Component(Section):
             # Make sure the bus mappings line up properly
             available_bus = set()
             used_bus = set()
-            for pin_name, mapping in node.children.pin_mapping.iteritems():
+            for pin_name, mapping in node.children.pin_mapping.items():
                 for ref in [ "pullup_ref", "pulldown_ref", "gnd_clamp_ref", "power_clamp_ref", "ext_ref" ]:
                     if mapping[ref] and mapping[ref].upper() == "NC":
                         mapping[ref] = None
@@ -997,7 +999,7 @@ class Component(Section):
                 raise Exception("'{}' listed in pin mapping, but not available".format(missing))
 
         if "Diff Pin" in node.children:
-            for pin_name, mapping in node.children.diff_pin.iteritems():
+            for pin_name, mapping in node.children.diff_pin.items():
                 if pin_name not in node.children.pin:
                     raise Exception("Invalid pin, '{}', listed in Diff Pin".format(pin_name))
                 if mapping.inv_pin not in node.children.pin:
@@ -1020,7 +1022,7 @@ class Component(Section):
 
         function_table_groups = set()
         if "Series Pin Mapping" in node.children:
-            for pin_tuple, mapping in node.children.series_pin_mapping.iteritems():
+            for pin_tuple, mapping in node.children.series_pin_mapping.items():
                 for pin_name in pin_tuple:
                     if pin_name not in node.children.pin:
                         raise Exception("Invalid pin, '{}', listed in series pin mapping"
@@ -1045,7 +1047,7 @@ class Component(Section):
                 "elements exist under series pin mapping")
 
         if "Circuit Call" in node.children:
-            for name, call in node.children.circuit_call.iteritems():
+            for name, call in node.children.circuit_call.items():
                 for n in [ "signal_pin", "diff_signal_pins", "series_pins" ]:
                     if n in call:
                         obj = call[n]
@@ -1058,7 +1060,7 @@ class Component(Section):
 
         if "Begin EMI Component" in node.children:
             if "Pin EMI" in node.children.begin_emi_component:
-                for pin, item in emi_component.pin_emi.iteritems():
+                for pin, item in emi_component.pin_emi.items():
                     if pin not in node.children.pin:
                         raise Exception("EMI Component lists unknown pin '{}'"
                             .format(pin))
@@ -1252,7 +1254,7 @@ class Model(BaseModel):
                 defaults = [ [ "Vinl", 0.8 ], [ "Vinh", 2.0 ] ]
             for n, v in defaults:
                 if n not in node.children or node.children[n] is None:
-                    print "Warning: '{}' for model '{}' not defined, using '{}'".format(n, node.key, v)
+                    print("Warning: '{}' for model '{}' not defined, using '{}'".format(n, node.key, v))
                     node.children[n] = v
 
         if not type_input:
@@ -1291,7 +1293,7 @@ class Model(BaseModel):
             required += ["Ramp"]
 
         if "Add Submodel" in node.children:
-            for submodel_name, mode in node.children.add_submodel.iteritems():
+            for submodel_name, mode in node.children.add_submodel.items():
                 if mode == "driving" and type_output:
                     raise Exception("Type '{}' cannot have submodel '{}' of mode '{}'"
                         .format(model_type, submodel_name, mode))
@@ -1321,9 +1323,9 @@ class Model(BaseModel):
                 required += ["{}erence".format(thresh.reference_supply)]
 
         if "Driver Schedule" in node.children:
-            for driver, data in node.children.driver_schedule.iteritems():
+            for driver, data in node.children.driver_schedule.items():
                 count = 0
-                for name, val in data.iteritems():
+                for name, val in data.items():
                     if val and not val >= 0:
                         raise Exception("'{}' driver schedule item '{}' has invalid value '{}'"
                             .format(driver, name, val))
@@ -1331,7 +1333,7 @@ class Model(BaseModel):
                         count += 1
                 invalid = False
                 if count == 2:
-                    print data
+                    print(data)
                     for combination in [ [ "rise_on_dly", "fall_off_dly" ],
                             [ "rise_off_dly", "fall_on_dly" ] ]:
                         if combination[0] in data and combination[1] in data:
@@ -1372,7 +1374,7 @@ class Model(BaseModel):
             used = set(ext.ports)
             for t in ["D_to_A", "A_to_D"]:
                 if t in ext:
-                    for name, obj in ext[t].iteritems():
+                    for name, obj in ext[t].items():
                         used.add(name)
                         for port in ["port1", "port2"]:
                             used.add(obj[port])
@@ -1568,7 +1570,7 @@ class External_Common(Section):
         node.children.corner = new_obj
         for typ in [ "D_to_A", "A_to_D" ]:
             if typ in node.children:
-                for name, obj in node.children[typ].iteritems():
+                for name, obj in node.children[typ].items():
                     if obj[0] is None:
                         raise Exception("Missing typ '{}' '{}'".format(typ, name))
                     new_obj = obj[0]
@@ -1601,12 +1603,12 @@ class External_Model(External_Common):
         super(External_Model, self).fin(node)
 
         if "D_to_A" in node.children:
-            for name, d_to_a in node.children.d_to_a.iteritems():
+            for name, d_to_a in node.children.d_to_a.items():
                 if name not in ["D_drive", "D_enable", "D_switch"]:
                     raise Exception("Contains disallowed port '{}' in D_to_A".format(name))
 
         if "A_to_D" in node.children:
-            for name, a_to_d in node.children.a_to_d.iteritems():
+            for name, a_to_d in node.children.a_to_d.items():
                 if name != "D_receive":
                     raise Exception("Contains disallowed port '{}' in A_to_D".format(name))
 
@@ -1683,7 +1685,7 @@ class Pin_Numbers(TokenizeSection):
         self.stub_parser.setParseAction(orderedDict)
 
         self.plain_parser = (Suppress(LineEnd() * (0,)) + Word(printables) - Suppress(LineEnd() * (1,))) * (0,)
-        self.plain_parser.setParseAction(lambda f: OrderedDict(map(lambda g: (g, None), f)))
+        self.plain_parser.setParseAction(lambda f: OrderedDict([(g, None) for g in f]))
 
     def fin(self, node):
         # FIXME: Check Number Of Sections number.
@@ -1801,7 +1803,7 @@ class Board_Description(Section):
         super(Board_Description, self).fin(node)
 
         node.refmap = node.children.get("Reference Designator Map", dict())
-        for name, path in node.children.path_description.iteritems():
+        for name, path in node.children.path_description.items():
             self.fin_path(node, name, path)
         del node.refmap
 
@@ -1827,13 +1829,13 @@ class EMI_Component(Section):
 
         domains = set()
         if "Pin EMI" in node.children:
-            for pin, item in node.children.pin_emi.iteritems():
+            for pin, item in node.children.pin_emi.items():
                 if item.domain_name is not None:
                     domains.add(item.domain_name)
 
         used = set()
         if "Pin Domain EMI" in node.children:
-            for domain, item in node.children.pin_domain_emi.iteritems():
+            for domain, item in node.children.pin_domain_emi.items():
                 if domain not in used:
                     raise Exception("Pin Domain EMI domain '{}' not in Pin EMI"
                         .format(domain))
@@ -1853,7 +1855,7 @@ class Pin_EMI(TableSection):
         super(Pin_EMI, self).fin(node)
 
         # Fill in defaults.
-        for pin, item in node.children.iteritems():
+        for pin, item in node.children.items():
             if item.clock_div is None:
                 item.clock_div = 1.0
             if item.domain_name.lower() == "na":
@@ -1901,11 +1903,11 @@ class IBS(IBISCommon):
 
         # Make sure all models under a model selector are the same type and exist.
         if "Model Selector" in node.children:
-            for name, sel in node.children.model_selector.iteritems():
-                if not len(sel.keys()):
+            for name, sel in node.children.model_selector.items():
+                if not len(list(sel.keys())):
                     raise Exception("Empty model selector, '{}'".format(name))
                 model_type = None
-                for model_name in sel.keys():
+                for model_name in list(sel.keys()):
                     if model_name not in node.children.model:
                         raise Exception("Model '{}' in model selector '{}' does not exist"
                             .format(model_name, name))
@@ -1914,17 +1916,17 @@ class IBS(IBISCommon):
                         if model_type != model.model_type:
                             raise Exception("Model '{}' in model selector '{}' model_type '{}' does "
                                 "not match model type, '{}', of first model, '{}'"
-                                .format(model_name, name, model.model_type, model_type, sel.keys()[0]))
+                                .format(model_name, name, model.model_type, model_type, list(sel.keys())[0]))
                 
         # Make sure models referenced by the component pin list exist.
-        for component_name, component in node.children.component.iteritems():
-            for pin_name, pin in component.pin.iteritems():
+        for component_name, component in node.children.component.items():
+            for pin_name, pin in component.pin.items():
                 model_name = pin.model_name
                 if model_name is None or model_name in [ "POWER", "GND", "CIRCUITCALL" ]:
                     continue
                 if model_name not in node.children.model:
                     if "Model Selector" in node.children and model_name in node.children.model_selector:
-                        model_name = node.children.model_selector[model_name].keys()[0]
+                        model_name = list(node.children.model_selector[model_name].keys())[0]
                     else:
                         raise Exception("Component '{}' lists unknown model '{}' "
                             "for pin '{}'"
@@ -1937,11 +1939,11 @@ class IBS(IBISCommon):
 
 
             if "Series Pin Mapping" in component:
-                for pin_name, mapping in component.series_pin_mapping.iteritems():
+                for pin_name, mapping in component.series_pin_mapping.items():
                     model_name = mapping.model_name
                     if model_name not in node.children.model:
                         if model_name in node.children.model_selector:
-                            model_name = node.children.model_selector[model_name].keys()[0]
+                            model_name = list(node.children.model_selector[model_name].keys())[0]
                         else:
                             raise Exception("Component '{}' lists unknown model '{}' "
                                 "for series pin mapping '{}'"
@@ -1957,26 +1959,26 @@ class IBS(IBISCommon):
                             .format(pin_name, component_name, model_name))
 
         if "Model" in node.children:
-            for model_name, model in node.children.model.iteritems():
+            for model_name, model in node.children.model.items():
                 model_type = model.model_type
                 if "Add Submodel" in model:
-                    for submodel_name, mode in model.add_submodel.iteritems():
+                    for submodel_name, mode in model.add_submodel.items():
                         if submodel_name not in node.children.submodel:
                             raise Exception("Submodel '{}' listed under model '{}' not available"
                                 .format(submodel_name, model_name))
                 if "Driver Schedule" in model:
-                    for driver, data in model.driver_schedule.iteritems():
+                    for driver, data in model.driver_schedule.items():
                         if driver not in node.children.model:
                             raise Exception("Listed driver schedule model, '{}', of '{}' does not exist"
                                 .format(driver, model_name))
                         sched_model = node.children.model[driver]
-                        if "Driver Schedule" is sched_model:
+                        if "Driver Schedule" == sched_model:
                             raise Exception("Listed driver schedule model, '{}' of '{}' contains "
                                 "driver schedule section"
                                 .format(driver, model_name))
 
         if "Test Data" in node.children:
-            for data_name, data in node.children.test_data.iteritems():
+            for data_name, data in node.children.test_data.items():
                 model_name = data.driver_model
                 if model_name not in node.children.model:
                     raise Exception("Test data '{}' references non-existent model '{}'"
@@ -1996,7 +1998,7 @@ class IBS(IBISCommon):
                         .format(data_name, load_name))
 
         if "Test Load" in node.children:
-            for load_name, load in node.children.test_load.iteritems():
+            for load_name, load in node.children.test_load.items():
                 model_name = data.receiver_model
                 if model_name not in node.children.model:
                     raise Exception("Test load '{}' references non-existent model '{}'"
@@ -2037,19 +2039,19 @@ class Parser(object):
         self.current = self.initial()
 
         if isinstance(input_file, str):
-            input_file = open(input_file, 'rb')
+            input_file = open(input_file, 'r', encoding='utf-8')
         num = 1
         while True:
             line = input_file.readline()
             if line == "": # EOF
-		if self.current:
+                if self.current:
                     raise Exception("No [End] keyword")
                 return self.root_node.children
             try:
                 self.parseLine(line)
             except:
                 # FIXME: Maybe add outside of scope message for otherwise valid stuff.
-                print "Parsing failed on line {}: '{}'".format(num, line.rstrip())
+                print("Parsing failed on line {}: '{}'".format(num, line.rstrip()))
                 raise
             num += 1
 
@@ -2062,16 +2064,16 @@ class Parser(object):
         first = True
         for obj in objs:
             if first:
-                print "In",
+                print("In", end=' ')
                 first = False
             else:
-                print ",",
-            print "'{}".format(obj.parser.key),
+                print(",", end=' ')
+            print("'{}".format(obj.parser.key), end=' ')
             if hasattr(obj, 'key') and obj.key is not None:
-                print "{}'".format(obj.key),
+                print("{}'".format(obj.key), end=' ')
             else:
-                print "'",
-        print ":"
+                print("'", end=' ')
+        print(":")
 
     def parseLine(self, line):
         text, _, comment = line.partition(self.comment_holder[0])
@@ -2110,7 +2112,7 @@ class Parser(object):
                     if self.current.parser.parse(self.current, text.lstrip(), comment):
                         break
                 except:
-                    print 'Parse Error',
+                    print('Parse Error', end=' ')
                     self.backtrace()
                     raise
 
@@ -2144,19 +2146,19 @@ class EBDParser(Parser):
 
 def dump(node, depth=0):
     if isinstance(node, dict):
-        print "{"
-        for name, child in node.iteritems():
-            print "{}{}:".format("  " * depth, name),
+        print("{")
+        for name, child in node.items():
+            print("{}{}:".format("  " * depth, name), end=' ')
             dump(child, depth + 1)
-        print "{}}},".format("  " * (depth - 1))
+        print("{}}},".format("  " * (depth - 1)))
     elif isinstance(node, list):
-        print "["
+        print("[")
         for child in node:
-            print "{} ".format("  " * depth),
+            print("{} ".format("  " * depth), end=' ')
             dump(child, depth + 1)
-        print "{}]".format("  " * depth)
+        print("{}]".format("  " * depth))
     else:
-        print "'{}'".format(node)
+        print("'{}'".format(node))
 
 if __name__ == "__main__":
     f = sys.argv[1]
@@ -2170,8 +2172,8 @@ if __name__ == "__main__":
     elif ext == "ebd":
         parser = EBDParser()
     else:
-        print "Unknown extensions, '{}', assuming ibs".format(ext)
+        print("Unknown extensions, '{}', assuming ibs".format(ext))
         parser = IBSParser()
 
-    root = parser.parse(open(sys.argv[1], 'rb'))
+    root = parser.parse(open(sys.argv[1], 'r', encoding='utf-8'))
     dump(root)
