@@ -44,7 +44,7 @@ def in_range(lower, upper):
     """Throw an exception if a number is not in a range."""
     def func(n):
         if not lower <= n <= upper:
-            raise Exception("'{}' is not in range '{}'".format(n, (lower, upper)))
+            raise Exception(f"'{n}' is not in range '{lower, upper}'")
         return n
     return func
 
@@ -62,7 +62,7 @@ class Real(Token):
         try:
             return loc + len(tokens[0]), self.check(ParseReal(tokens[0]))
         except:
-            raise ParseException(tokens[0], loc, "Could not parse float, '{}'".format(tokens[0]))
+            raise ParseException(tokens[0], loc, f"Could not parse float, '{tokens[0]}'")
 
 class Integer(Token):
     """pyparse an Integer."""
@@ -355,7 +355,7 @@ class Parse(object):
             try:
                 return self.pyparser.parseString(text, parseAll=True)
             except ParseException as e:
-                raise Exception("Failed to parse '{}': {}".format(text, e.msg))
+                raise Exception(f"Failed to parse '{text}': {e.msg}")
         else:
             return text.strip()
 
@@ -368,7 +368,7 @@ class Parse(object):
 
         for name, p in self.children.items():
             if p.required and not name in node.children:
-                raise Exception("'{}' is missing required '{}'".format(self.key, name))
+                raise Exception(f"'{self.key}' is missing required '{name}'")
 
         if node.children:
             node.data = node.children
@@ -410,7 +410,7 @@ class Parse(object):
             else:
                 orig.data.append(new.data)
         elif orig.data != self.initvalue and orig.data != self.default:
-            raise Exception("'{}' already assigned".format(self.key))
+            raise Exception(f"'{self.key}' already assigned")
         else:
             orig.data = new.data
 
@@ -446,7 +446,7 @@ class Comment(Bracket):
         elif not node.sectionText[1:].startsWith("_char"):
             raise Exception("Invalid format, expected '<char>_char'")
         elif not node.sectionText[0] in "!\"#$%&'()*,:;<>?@\\^`{|}~":
-            raise Exception("Invalid comment char, '{}'".format(node.sectionText[0]))
+            raise Exception(f"Invalid comment char, '{node.sectionText[0]}'")
         else:
             self.holder[0] = node.sectionText[0]
         return node
@@ -466,7 +466,7 @@ class Keyword(Bracket):
     def initial(self, text, comment):
         node = super(Keyword, self).initial(text, comment)
         if not node.sectionText:
-            raise Exception("Expected text after '{}'".format(text))
+            raise Exception(f"Expected text after '{text}'")
         node.data = self.pyparse(node.sectionText)
         return node
 
@@ -523,15 +523,15 @@ class Section(Bracket):
     def initial(self, text, comment):
         node = super(Section, self).initial(text, comment)
         if self.needs_text and not node.sectionText:
-            raise Exception("Expected text after '{}'".format(text))
+            raise Exception(f"Expected text after '{text}'")
         elif not self.needs_text and node.sectionText:
-            raise Exception("Unexpected text after keyword, '{}'".format(node.sectionText))
+            raise Exception(f"Unexpected text after keyword, '{node.sectionText}'")
         node.key = node.sectionText
         return node
 
     def labeled_merge(self, orig, new):
         if new.key in orig.data:
-            raise Exception("'{}' already contains '{}'".format(self.key, new.key))
+            raise Exception(f"'{self.key}' already contains '{new.key}'")
         orig.data[new.key] = new.data
 
 class TokenizeSection(Section):
@@ -569,13 +569,13 @@ class TableSection(Section):
         node = super(TableSection, self).initial(text, comment)
         node.keys = node.sectionText.lower().split()
         if len(node.keys) != len(set(node.keys)):
-            raise Exception("'{}' contains duplicates".format(node.sectionText))
+            raise Exception(f"'{node.sectionText}' contains duplicates")
         for key in self.headers:
             if key not in node.keys:
-                raise Exception("Expected header names to contain '{}'".format(key))
+                raise Exception(f"Expected header names to contain '{key}'")
         for key in node.keys:
             if key not in self.headers and key not in self.optional:
-                raise Exception("Unexpected header name, '{}'".format(key))
+                raise Exception(f"Unexpected header name, '{key}'")
         for key in self.optional:
             if key not in node.keys:
                 node.keys.append(key)
@@ -584,7 +584,7 @@ class TableSection(Section):
     def assign_row(self, node, key, row):
         """For Seires_Pin_Mapping to override."""
         if key in node.data:
-            raise Exception("'{}' already contains '{}'".format(self.key, key))
+            raise Exception(f"'{self.key}' already contains '{key}'")
         node.data[key] = row
 
     def parse(self, node, text, comment):
@@ -603,12 +603,12 @@ class TableSection(Section):
                 try:
                     tmp.data = parser.parseString(row[name], parseAll=True)
                 except ParseException as e:
-                    raise Exception("Failed to parse '{}', '{}': {}".format(name, row[name], e.msg))
+                    raise Exception(f"Failed to parse '{name}', '{row[name]}': {e.msg}")
                 self.flatten(tmp)
                 row[name] = tmp.data
         for key in self.headers:
             if key not in row:
-                raise Exception("Required column '{}' missing".format(key))
+                raise Exception(f"Required column '{key}' missing")
         for key in self.optional:
             if key not in row:
                 row[key] = None
@@ -649,7 +649,7 @@ class DictSection(Section):
             tmp.data = self.pyparse(tokens[1])
             self.flatten(tmp)
             if tokens[0] in node.data:
-                raise Exception("'{}' already contains '{}'".format(self.key, tokens[0]))
+                raise Exception(f"'{self.key}' already contains '{tokens[0]}'")
             node.data[tokens[0]] = tmp.data
         return True
 
@@ -739,14 +739,14 @@ class MatrixSection(Section):
             try:
                 r = pm[row]
             except KeyError:
-                raise Exception("Unknown pin name '{}' in matrix".format(row))
+                raise Exception(f"Unknown pin name '{row}' in matrix")
 
             if node.sectionText == "sparse_matrix":
                 for col, val in zip(data[::2], data[1::2]):
                     try:
                         c = pm[col]
                     except KeyError:
-                        raise Exception("Unknown pin name '{}' in matrix".format(col))
+                        raise Exception(f"Unknown pin name '{col}' in matrix")
                     node.data[r][c] = self.check(ParseReal(val))
 
             elif node.sectionText == "banded_matrix" or node.sectionText == "full_matrix":
@@ -756,7 +756,7 @@ class MatrixSection(Section):
                     c = (c + 1) % len(pm)
 
             else:
-                raise Exception("incomplete/unknown matrix".format(node.sectionText))
+                raise Exception(f"incomplete/unknown matrix: {node.sectionText}")
 
         node.children = None
         super(MatrixSection, self).fin(node)
@@ -804,7 +804,7 @@ class DictParam(Param):
 
     def merge(self, orig, new):
         if new.key in orig.data:
-            raise Exception("'{}' already contains '{}'".format(self.key, new.key))
+            raise Exception(f"'{self.key}' already contains '{new.key}'")
         orig.data[new.key] = new.data
 
 class RangeParam(Param):
@@ -830,12 +830,12 @@ class RangeParam(Param):
         elif new.range == "max":
             r = 2
         else:
-            raise Exception("Unknown range key, '{}'".format(new.range))
+            raise Exception(f"Unknown range key, '{new.range}'")
 
         if orig.data[r] is None:
             orig.data[r] = new.data
         else:
-            raise Exception("{} value for '{}' already specified".format(new.range, self.key))
+            raise Exception(f"{new.range} value for '{self.key}' already specified")
 
 class RangeDictParam(Param):
     """Oi...we need a combination of the above two, as in 'D_to_A'."""
@@ -862,12 +862,12 @@ class RangeDictParam(Param):
         elif new.range == "max":
             r = 2
         else:
-            raise Exception("Unknown range key, '{}'".format(new.range))
+            raise Exception(f"Unknown range key, '{new.range}'")
 
         if orig.data[new.key][r] is None:
             orig.data[new.key][r] = new.data
         else:
-            raise Exception("{} value for '{}' already specified".format(new.range, new.key))
+            raise Exception(f"{new.range} value for '{new.key}' already specified")
 
 class Header(Parse):
     """Section 4."""
@@ -892,7 +892,7 @@ class Series_Pin_Mapping(TableSection):
         key = (key, row["pin_2"] )
         del row["pin_2"]
         if key[0] == key[1]:
-            raise Exception("series pin '{}' maps to itself".format(key[0]))
+            raise Exception(f"series pin '{key[0]}' maps to itself")
         super(Series_Pin_Mapping, self).assign_row(node, key, row)
 
 class Component(Section):
@@ -972,21 +972,21 @@ class Component(Section):
                         mapping[ref] = None
 
                 if pin_name not in node.children.pin:
-                    raise Exception("Invalid pin, '{}', listed in Pin Mapping".format(pin_name))
+                    raise Exception(f"Invalid pin, '{pin_name}', listed in Pin Mapping")
                 pin_info = node.children.pin[pin_name]
 
                 if pin_info.model_name == "GND":
                     if mapping.pullup_ref is not None:
-                        raise Exception("Expected 'NC' for pin mapping of '{}'".format(pin_name))
+                        raise Exception(f"Expected 'NC' for pin mapping of '{pin_name}'")
                     if mapping.pulldown_ref is None:
-                        raise Exception("Unexpected 'NC' for pin mapping of '{}'".format(pin_name))
+                        raise Exception(f"Unexpected 'NC' for pin mapping of '{pin_name}'")
                     available_bus.add(mapping.pulldown_ref)
 
                 elif pin_info.model_name == "POWER":
                     if mapping.pulldown_ref is not None:
-                        raise Exception("Expected 'NC' for pin mapping of '{}'".format(pin_name))
+                        raise Exception(f"Expected 'NC' for pin mapping of '{pin_name}'")
                     if mapping.pullup_ref is None:
-                        raise Exception("Unexpected 'NC' for pin mapping of '{}'".format(pin_name))
+                        raise Exception(f"Unexpected 'NC' for pin mapping of '{pin_name}'")
                     available_bus.add(mapping.pullup_ref)
 
                 else:
@@ -996,16 +996,16 @@ class Component(Section):
 
             missing = used_bus.difference(available_bus)
             if len(missing):
-                raise Exception("'{}' listed in pin mapping, but not available".format(missing))
+                raise Exception(f"'{missing}' listed in pin mapping, but not available")
 
         if "Diff Pin" in node.children:
             for pin_name, mapping in node.children.diff_pin.items():
                 if pin_name not in node.children.pin:
-                    raise Exception("Invalid pin, '{}', listed in Diff Pin".format(pin_name))
+                    raise Exception(f"Invalid pin, '{pin_name}', listed in Diff Pin")
                 if mapping.inv_pin not in node.children.pin:
-                    raise Exception("Invalid pin, '{}', listed in Diff Pin".format(mapping.inv_pin))
+                    raise Exception(f"Invalid pin, '{mapping.inv_pin}', listed in Diff Pin")
                 if pin_name == mapping.inv_pin:
-                    raise Exception("Diff Pin '{}' maps to itself".format(pin_name))
+                    raise Exception(f"Diff Pin '{pin_name}' maps to itself")
 
                 # Fill in vdiff default
                 if mapping.vdiff is None:
@@ -1025,8 +1025,7 @@ class Component(Section):
             for pin_tuple, mapping in node.children.series_pin_mapping.items():
                 for pin_name in pin_tuple:
                     if pin_name not in node.children.pin:
-                        raise Exception("Invalid pin, '{}', listed in series pin mapping"
-                            .format(pin_name))
+                        raise Exception(f"Invalid pin, '{pin_name}', listed in series pin mapping")
                 group = mapping.function_table_group
                 if group is not None:
                     function_table_groups.add(group)
@@ -1039,9 +1038,8 @@ class Component(Section):
                 groups = set(group[1:])
                 missing = groups.difference(function_table_groups)
                 if len(missing):
-                    raise Exception("Series Switch Groups list '{}' which are not "
-                        "available in the series pin mapping table"
-                        .format(missing))
+                    raise Exception(f"Series Switch Groups list '{missing}' which are not "
+                        "available in the series pin mapping table")
         elif "Series Switch Groups" in node.children:
             raise Exception("Series Switch Groups exists but no function_table_group "
                 "elements exist under series pin mapping")
@@ -1055,15 +1053,13 @@ class Component(Section):
                             obj = [ obj ]
                         for pin in obj:
                             if pin not in node.children["pin"]:
-                                raise Exception("Circuit Call '{}' contains unknown pin '{}'"
-                                    .format(name, pin))
+                                raise Exception(f"Circuit Call '{name}' contains unknown pin '{pin}'")
 
         if "Begin EMI Component" in node.children:
             if "Pin EMI" in node.children.begin_emi_component:
                 for pin, item in emi_component.pin_emi.items():
                     if pin not in node.children.pin:
-                        raise Exception("EMI Component lists unknown pin '{}'"
-                            .format(pin))
+                        raise Exception(f"EMI Component lists unknown pin '{pin}'")
 
 class BaseModel(Section):
     """Section 6/6a."""
@@ -1125,7 +1121,7 @@ class Series_MOSFET(RangeSection):
 
     def merge(self, orig, new):
         if new.key in orig.data:
-            raise Exception("'{}' already contains '{}'".format(self.key, new.key))
+            raise Exception(f"'{self.key}' already contains '{new.key}'")
         orig.data[new.key] = new.data
 
 class Model(BaseModel):
@@ -1254,7 +1250,7 @@ class Model(BaseModel):
                 defaults = [ [ "Vinl", 0.8 ], [ "Vinh", 2.0 ] ]
             for n, v in defaults:
                 if n not in node.children or node.children[n] is None:
-                    print("Warning: '{}' for model '{}' not defined, using '{}'".format(n, node.key, v))
+                    print(f"Warning: '{n}' for model '{node.key}' not defined, using '{v}'")
                     node.children[n] = v
 
         if not type_input:
@@ -1295,40 +1291,34 @@ class Model(BaseModel):
         if "Add Submodel" in node.children:
             for submodel_name, mode in node.children.add_submodel.items():
                 if mode == "driving" and type_output:
-                    raise Exception("Type '{}' cannot have submodel '{}' of mode '{}'"
-                        .format(model_type, submodel_name, mode))
+                    raise Exception(f"Type '{model_type}' cannot have submodel '{submodel_name}' of mode '{mode}'")
                 if mode == "non-driving" and not type_input and not type_enable:
-                    raise Exception("'Type '{}' cannot have submodel '{}' of mode '{}'"
-                        .format(model_type, submodel_name, mode))
+                    raise Exception(f"'Type '{model_type}' cannot have submodel '{submodel_name}' of mode '{mode}'")
 
         if "Model Spec" in node.children:
             for level in [ "low", "high" ]:
                 if "D_overshoot_" + level in node.children.model_spec:
                     if "S_overshoot_" + level not in node.children.model_spec:
-                        raise Exception("D_overshoot_{} requires S_overshoot_{}"
-                            .format(level, level))
+                        raise Exception(f"D_overshoot_{level} requires S_overshoot_{level}")
                     if "D_overshoot_time" not in node.children.model_spec:
-                        raise Exception("D_overshoot_{} requires D_overshoot_time"
-                            .format(level))
+                        raise Exception(f"D_overshoot_{level} requires D_overshoot_time")
                 if "D_overshoot_area_" + level[0] in node.children:
                     if "D_overshoot_ampl_" + level[0] not in node.chidren:
-                        raise Exception("D_overshoot_area_{} requires D_overshoot_ampl_{}"
-                            .format(level[0], level[0]))
+                        raise Exception(f"D_overshoot_area_{level[0]} requires D_overshoot_ampl_{level[0]}")
 
         if "Receiver Thresholds" in node.children:
             thresh = node.children.receiver_thresholds
             if "Threshold_sensitivity" in thresh:
                 if "Reference_supply" not in thresh:
                     raise Exception("'Reference_supply' required when 'Threshold_sensitivity' is present")
-                required += ["{}erence".format(thresh.reference_supply)]
+                required += [f"{thresh.reference_supply}erence"]
 
         if "Driver Schedule" in node.children:
             for driver, data in node.children.driver_schedule.items():
                 count = 0
                 for name, val in data.items():
                     if val and not val >= 0:
-                        raise Exception("'{}' driver schedule item '{}' has invalid value '{}'"
-                            .format(driver, name, val))
+                        raise Exception(f"'{driver}' driver schedule item '{name}' has invalid value '{val}'")
                     if val is not None:
                         count += 1
                 invalid = False
@@ -1339,8 +1329,7 @@ class Model(BaseModel):
                         if combination[0] in data and combination[1] in data:
                             invalid = True
                 if (count != 2 and count != 4) or invalid:
-                    raise Exception("Invalid dly combination for driver schedule '{}'"
-                        .format(driver))
+                    raise Exception(f"Invalid dly combination for driver schedule '{driver}'")
 
         if "Voltage Range" not in node.children:
             required += [ "Pullup Reference", "Pulldown Reference",
@@ -1348,7 +1337,7 @@ class Model(BaseModel):
 
         c_comp_required = True
         for keyword in [ "pullup", "pulldown", "power_clamp", "gnd_clamp" ]:
-            if "C_comp_{}".format(keyword) in node.children:
+            if f"C_comp_{keyword}" in node.children:
                 c_comp_required = False
                 break
         if "External Model" in node.children:
@@ -1380,20 +1369,17 @@ class Model(BaseModel):
                             used.add(obj[port])
             for port in ports:
                 if port not in used:
-                    raise Exception("External Model missing port '{}'"
-                        .format(port))
+                    raise Exception(f"External Model missing port '{port}'")
 
         if c_comp_required:
             required += ["C_comp"]
 
         for keyword in disallowed:
             if keyword in node.children:
-                raise Exception("Keyword '{}' not permitted in type '{}'"
-                    .format(keyword, model_type))
+                raise Exception(f"Keyword '{keyword}' not permitted in type '{model_type}'")
         for keyword in required:
             if keyword not in node.children:
-                raise Exception("Type '{}' missing required keyword '{}'"
-                    .format(model_type, keyword))
+                raise Exception(f"Type '{model_type}' missing required keyword '{keyword}'")
             
         if type_switch:
             for d in [ "On", "Off"]:
@@ -1412,8 +1398,7 @@ class Model(BaseModel):
                         sect["Lc Series"] = 0.0
                 for keyword in disallowed:
                     if keyword in sect:
-                        raise Exception("Keyword '{}' not permitted in '{}'"
-                            .format(keyword, d))
+                        raise Exception(f"Keyword '{keyword}' not permitted in '{d}'")
 
 class Test_Data(Section):
     """See http://www.vhdl.org/pub/ibis/birds/bird142.txt"""
@@ -1476,10 +1461,9 @@ class Test_Load(Section):
 
         for n in [ "1", "2" ]:
             for t in [ "near", "far" ]:
-                if "Rp{}_{}".format(n, t) in node.children:
-                    if "V_term{}".format(n) not in node.children:
-                        raise Exception("Contains 'Rp{}_{}' but not 'V_term{}'"
-                            .format(n, t, n))
+                if f"Rp{n}_{t}" in node.children:
+                    if f"V_term{n}" not in node.children:
+                        raise Exception(f"Contains 'Rp{n}_{t}' but not 'V_term{n}'")
 
 class Submodel(BaseModel):
     """Section 6a."""
@@ -1523,7 +1507,7 @@ class Submodel(BaseModel):
                 raise Exception("Missing 'ramp' keyword")
             for t in [ "V_trigger_f", "V_trigger_r" ]:
                 if not spec or t not in spec:
-                    raise Exception("Missing '{}' keyword".format(t))
+                    raise Exception(f"Missing '{t}' keyword")
 
 class External_Common(Section):
     """"Section 6b."""
@@ -1558,7 +1542,7 @@ class External_Common(Section):
         super(External_Common, self).fin(node)
 
         if node.children.corner[0] is None:
-            raise Exception("Missing typ corner '{}'".format(name))
+            raise Exception(f"Missing typ corner '{name}'")
         new_obj = node.children.corner[0]
         for n in [ "file_name", "circuit_name" ]:
             new_obj[n] = Range([ new_obj[n] ])
@@ -1572,7 +1556,7 @@ class External_Common(Section):
             if typ in node.children:
                 for name, obj in node.children[typ].items():
                     if obj[0] is None:
-                        raise Exception("Missing typ '{}' '{}'".format(typ, name))
+                        raise Exception(f"Missing typ '{typ}' '{name}'")
                     new_obj = obj[0]
                     for n in [ "vlow", "vhigh", "trise", "tfall" ]:
                         if n in new_obj:
@@ -1585,8 +1569,7 @@ class External_Common(Section):
                     for i in [ 1, 2 ]:
                         for n in [ "port1", "port2" ]:
                             if obj[i] is not None and obj[i][n] != obj[0][n]:
-                                raise Exception("D_to_A '{}' typ/min/max '{}' do not match"
-                                    .format(name, n))
+                                raise Exception(f"D_to_A '{name}' typ/min/max '{n}' do not match")
                     node.children[typ][name] = new_obj
 
 
@@ -1605,12 +1588,12 @@ class External_Model(External_Common):
         if "D_to_A" in node.children:
             for name, d_to_a in node.children.d_to_a.items():
                 if name not in ["D_drive", "D_enable", "D_switch"]:
-                    raise Exception("Contains disallowed port '{}' in D_to_A".format(name))
+                    raise Exception(f"Contains disallowed port '{name}' in D_to_A")
 
         if "A_to_D" in node.children:
             for name, a_to_d in node.children.a_to_d.items():
                 if name != "D_receive":
-                    raise Exception("Contains disallowed port '{}' in A_to_D".format(name))
+                    raise Exception(f"Contains disallowed port '{name}' in A_to_D")
 
 class Node_Declarations(TokenizeSection):
     def __init__(self, **kwds):
@@ -1639,7 +1622,7 @@ class Circuit_Call(Section):
                 obj = node.children[n]
                 if isinstance(obj, list):
                     if obj[0] == obj[1]:
-                        raise Exception("'{}' points to itself".format(n))
+                        raise Exception(f"'{n}' points to itself")
 
         if count > 1:
             raise Exception("Has more than one pin mapping")
@@ -1789,13 +1772,12 @@ class Board_Description(Section):
                     if item.pin.upper() == "NC":
                         item.pin = None
                     if item.pin is not None and item.pin not in node.children.pin_list:
-                        raise Exception("Path '{}', pin '{}' not in pin list"
-                            .format(name, item.pin))
+                        raise Exception(f"Path '{name}', pin '{item.pin}' not in pin list")
                 elif "node" in item:
                     n, p = item.node.split('.')
                     if n not in node.refmap:
-                        raise Exception("Node '{}' of path '{}' references refdes "
-                            "not in reference designator map".format(item.node, name))
+                        raise Exception(f"Node '{item.node}' of path '{name}' references refdes "
+                            "not in reference designator map")
             elif isinstance(item, list):
                 self.fin_path(node, name, item)
 
@@ -1837,14 +1819,12 @@ class EMI_Component(Section):
         if "Pin Domain EMI" in node.children:
             for domain, item in node.children.pin_domain_emi.items():
                 if domain not in used:
-                    raise Exception("Pin Domain EMI domain '{}' not in Pin EMI"
-                        .format(domain))
+                    raise Exception(f"Pin Domain EMI domain '{domain}' not in Pin EMI")
                 used.add(domain)
 
         missing = demains - used
         if len(missing):
-            raise Exception("Pin EMI contains '{}' which are not contained in Pin Domain EMI"
-                .format(missing))
+            raise Exception(f"Pin EMI contains '{missing}' which are not contained in Pin Domain EMI")
 
 class Pin_EMI(TableSection):
     def __init__(self, **kwds):
@@ -1905,18 +1885,16 @@ class IBS(IBISCommon):
         if "Model Selector" in node.children:
             for name, sel in node.children.model_selector.items():
                 if not len(list(sel.keys())):
-                    raise Exception("Empty model selector, '{}'".format(name))
+                    raise Exception(f"Empty model selector, '{name}'")
                 model_type = None
                 for model_name in list(sel.keys()):
                     if model_name not in node.children.model:
-                        raise Exception("Model '{}' in model selector '{}' does not exist"
-                            .format(model_name, name))
+                        raise Exception(f"Model '{model_name}' in model selector '{name}' does not exist")
                     model = node.children.model[model_name]
                     if model_type:
                         if model_type != model.model_type:
-                            raise Exception("Model '{}' in model selector '{}' model_type '{}' does "
-                                "not match model type, '{}', of first model, '{}'"
-                                .format(model_name, name, model.model_type, model_type, list(sel.keys())[0]))
+                            raise Exception(f"Model '{model_name}' in model selector '{name}' model_type '{model.model_type}' does "
+                                "not match model type, '{model_type}', of first model, '{list(sel.keys())[0]}'")
                 
         # Make sure models referenced by the component pin list exist.
         for component_name, component in node.children.component.items():
@@ -1928,14 +1906,12 @@ class IBS(IBISCommon):
                     if "Model Selector" in node.children and model_name in node.children.model_selector:
                         model_name = list(node.children.model_selector[model_name].keys())[0]
                     else:
-                        raise Exception("Component '{}' lists unknown model '{}' "
-                            "for pin '{}'"
-                            .format(component_name, model_name, pin_name))
+                        raise Exception(f"Component '{component_name}' lists unknown model '{model_name}' "
+                            "for pin '{pin_name}'")
                 model_type = node.children.model[model_name].model_type
                 if model_type in [ "series", "series_switch" ]:
-                    raise Exception("Pin '{}' in component '{}' is "
-                        "of wrong model type, '{}'"
-                        .format(pin_name, component_name, model_type))
+                    raise Exception(f"Pin '{pin_name}' in component '{component_name}' is "
+                        "of wrong model type, '{model_type}'")
 
 
             if "Series Pin Mapping" in component:
@@ -1945,18 +1921,16 @@ class IBS(IBISCommon):
                         if model_name in node.children.model_selector:
                             model_name = list(node.children.model_selector[model_name].keys())[0]
                         else:
-                            raise Exception("Component '{}' lists unknown model '{}' "
-                                "for series pin mapping '{}'"
-                                .format(component_name, model_name, pin_name))
+                            raise Exception(f"Component '{component_name}' lists unknown model '{model_name}' "
+                                "for series pin mapping '{pin_name}'")
                     model_type = node.children.model[model_name].model_type
                     if model_type not in [ "series", "series_switch" ]:
-                        raise Exception("Series pin mapping '{}' in component '{}' is "
-                            "of wrong model type, '{}'".format(pin_name, component_name, model_type))
+                        raise Exception(f"Series pin mapping '{pin_name}' in component '{component_name}' is "
+                            "of wrong model type, '{model_type}'")
                     if model_type == "series" and mapping.function_table_group is not None:
                         raise Exception("Unexpected 'function_table_group' for series "
-                            "pin mapping '{}' of component '{}' with model '{}' which "
-                            "has model type 'series'"
-                            .format(pin_name, component_name, model_name))
+                            "pin mapping '{pin_name}' of component '{component_name}' with model '{model_name}' which "
+                            "has model type 'series'")
 
         if "Model" in node.children:
             for model_name, model in node.children.model.items():
@@ -1964,50 +1938,41 @@ class IBS(IBISCommon):
                 if "Add Submodel" in model:
                     for submodel_name, mode in model.add_submodel.items():
                         if submodel_name not in node.children.submodel:
-                            raise Exception("Submodel '{}' listed under model '{}' not available"
-                                .format(submodel_name, model_name))
+                            raise Exception(f"Submodel '{submodel_name}' listed under model '{model_name}' not available")
                 if "Driver Schedule" in model:
                     for driver, data in model.driver_schedule.items():
                         if driver not in node.children.model:
-                            raise Exception("Listed driver schedule model, '{}', of '{}' does not exist"
-                                .format(driver, model_name))
+                            raise Exception(f"Listed driver schedule model, '{driver}', of '{model_name}' does not exist")
                         sched_model = node.children.model[driver]
                         if "Driver Schedule" == sched_model:
-                            raise Exception("Listed driver schedule model, '{}' of '{}' contains "
-                                "driver schedule section"
-                                .format(driver, model_name))
+                            raise Exception("Listed driver schedule model, '{driver}' of '{model_name}' contains "
+                                "driver schedule section")
 
         if "Test Data" in node.children:
             for data_name, data in node.children.test_data.items():
                 model_name = data.driver_model
                 if model_name not in node.children.model:
-                    raise Exception("Test data '{}' references non-existent model '{}'"
-                        .format(data_name, model_name))
+                    raise Exception(f"Test data '{data_name}' references non-existent model '{model_name}'")
                 if "Driver_model_inv" in data:
                     inv_model_name = data.driver_model_inv
                     if inv_model_name not in node.children.model:
-                        raise Exception("Test data '{}' references non-existent model '{}'"
-                            .format(data_name, inv_model_name))
+                        raise Exception(f"Test data '{data_name}' references non-existent model '{inv_model_name}'")
                 load_name = data.test_load
                 if load_name not in node.children.test_load:
-                    raise Exception("Test data '{}' references non-existent load '{}'"
-                        .format(data_name, load_name))
+                    raise Exception(f"Test data '{data_name}' references non-existent load '{load_name}'")
                 load = node.children.test_load[load_name]
                 if data.test_data_type != load.test_load_type:
-                    raise Exception("Test data '{}' type does not match load ('{}') type"
-                        .format(data_name, load_name))
+                    raise Exception(f"Test data '{data_name}' type does not match load ('{load_name}') type")
 
         if "Test Load" in node.children:
             for load_name, load in node.children.test_load.items():
                 model_name = data.receiver_model
                 if model_name not in node.children.model:
-                    raise Exception("Test load '{}' references non-existent model '{}'"
-                        .format(load_name, model_name))
+                    raise Exception(f"Test load '{load_name}' references non-existent model '{model_name}'")
                 if "Receiver_model_inv" in data:
                     inv_model_name = data.receiver_model_inv
                     if inv_model_name not in node.children.model:
-                        raise Exception("Test load '{}' references non-existent model '{}'"
-                            .format(load_name, inv_model_name))
+                        raise Exception(f"Test load '{load_name}' references non-existent model '{inv_model_name}'")
 
 
 class PKG(IBISCommon):
@@ -2051,7 +2016,7 @@ class Parser(object):
                 self.parseLine(line)
             except:
                 # FIXME: Maybe add outside of scope message for otherwise valid stuff.
-                print("Parsing failed on line {}: '{}'".format(num, line.rstrip()))
+                print(f"Parsing failed on line {num}: '{line.rstrip()}'")
                 raise
             num += 1
 
@@ -2068,9 +2033,9 @@ class Parser(object):
                 first = False
             else:
                 print(",", end=' ')
-            print("'{}".format(obj.parser.key), end=' ')
+            print(f"'{obj.parser.key}", end=' ')
             if hasattr(obj, 'key') and obj.key is not None:
-                print("{}'".format(obj.key), end=' ')
+                print(f"{obj.key}'", end=' ')
             else:
                 print("'", end=' ')
         print(":")
@@ -2127,7 +2092,7 @@ class Parser(object):
                 last = self.current.parser
 
             if not self.current:
-                raise Exception("Error: Unexpected text in section [{}]".format(last.key))
+                raise Exception(f"Error: Unexpected text in section [{last.key}]")
 
 class IBSParser(Parser):
     def __init__(self):
@@ -2148,17 +2113,17 @@ def dump(node, depth=0):
     if isinstance(node, dict):
         print("{")
         for name, child in node.items():
-            print("{}{}:".format("  " * depth, name), end=' ')
+            print(f"{'  ' * depth}{name}:", end=' ')
             dump(child, depth + 1)
-        print("{}}},".format("  " * (depth - 1)))
+        print(f"{'  ' * (depth - 1)}}},")
     elif isinstance(node, list):
         print("[")
         for child in node:
-            print("{} ".format("  " * depth), end=' ')
+            print(f"{'  ' * depth} ", end=' ')
             dump(child, depth + 1)
-        print("{}]".format("  " * depth))
+        print(f"{'  ' * depth}]")
     else:
-        print("'{}'".format(node))
+        print(f"'{node}'")
 
 if __name__ == "__main__":
     f = sys.argv[1]
@@ -2172,7 +2137,7 @@ if __name__ == "__main__":
     elif ext == "ebd":
         parser = EBDParser()
     else:
-        print("Unknown extensions, '{}', assuming ibs".format(ext))
+        print(f"Unknown extensions, '{ext}', assuming ibs")
         parser = IBSParser()
 
     root = parser.parse(open(sys.argv[1], 'r', encoding='utf-8'))
