@@ -16,7 +16,7 @@ import sys
 import math
 import copy
 import re
-from pyparsing import alphanums, alphas, CaselessKeyword, Dict, Each, Forward, Group, LineStart, LineEnd, Literal, NotAny, oneOf, Optional, ParseException, ParserElement, ParseResults, printables, restOfLine, Token, Suppress, Word
+from pyparsing import alphanums, alphas, CaselessKeyword, Dict, Each, Forward, Group, LineStart, LineEnd, Literal, NotAny, one_of, Optional, ParseException, ParserElement, ParseResults, printables, restOfLine, Token, Suppress, Word
 from collections import OrderedDict
 from numpy import zeros
 
@@ -162,14 +162,14 @@ def RampRange():
         for i, t in enumerate(tokens[1:]):
             if t == "NA": tokens[i + 1] = None
         return Range(tokens.asList())
-    ret.setParseAction(fin)
+    ret.set_parse_action(fin)
     return ret
 
 def oneof(val):
     """pyparser for set of caseless keywords.
        All parsed values will be lowercase.
     """
-    return oneOf(val.lower(), caseless=True)
+    return one_of(val.lower(), caseless=True)
 
 def orderedDict(tokenlist):
     """pyparse action to create and OrderedDict from a set of tokens."""
@@ -353,7 +353,7 @@ class Parse(object):
         """
         if self.pyparser is not None:
             try:
-                return self.pyparser.parseString(text, parseAll=True)
+                return self.pyparser.parse_string(text, parseAll=True)
             except ParseException as e:
                 raise Exception(f"Failed to parse '{text}': {e.msg}")
         else:
@@ -601,7 +601,7 @@ class TableSection(Section):
             if name in row:
                 tmp = Node()
                 try:
-                    tmp.data = parser.parseString(row[name], parseAll=True)
+                    tmp.data = parser.parse_string(row[name], parseAll=True)
                 except ParseException as e:
                     raise Exception(f"Failed to parse '{name}', '{row[name]}': {e.msg}")
                 self.flatten(tmp)
@@ -1651,24 +1651,24 @@ class Pin_Numbers(TokenizeSection):
         stubs = Forward()
 
         fork_desc = (Suppress(LineStart() + CaselessKeyword("Fork") + LineEnd()) +
-            Group(stubs * (0,)).setParseAction(lambda f: f.asList()) +
+            Group(stubs * (0,)).set_parse_action(lambda f: f.asList()) +
             Suppress(LineStart() + CaselessKeyword("Endfork") + LineEnd()))
 
         stub_desc = (
             stubKeyword("Len") +
             Each([ Optional(stubKeyword(k)) for k in [ "L", "R", "C" ] ]) -
             Suppress(Literal("/") + LineEnd() * (0,))
-        ).setParseAction(lambda f: IBISNode(f.asDict()))
+        ).set_parse_action(lambda f: IBISNode(f.asDict()))
 
         stubs << (stub_desc | fork_desc)
 
         self.stub_parser = Group(Suppress(LineStart()) + Word(printables) - ~LineEnd() -
-                Group(stubs * (1,)).setParseAction(lambda f: f.asList())) * (1,)
-        self.stub_parser.setDefaultWhitespaceChars(" \t\r")
-        self.stub_parser.setParseAction(orderedDict)
+                Group(stubs * (1,)).set_parse_action(lambda f: f.asList())) * (1,)
+        self.stub_parser.set_default_whitespace_chars(" \t\r")
+        self.stub_parser.set_parse_action(orderedDict)
 
         self.plain_parser = (Suppress(LineEnd() * (0,)) + Word(printables) - Suppress(LineEnd() * (1,))) * (0,)
-        self.plain_parser.setParseAction(lambda f: OrderedDict([(g, None) for g in f]))
+        self.plain_parser.set_parse_action(lambda f: OrderedDict([(g, None) for g in f]))
 
     def fin(self, node):
         # FIXME: Check Number Of Sections number.
@@ -1725,20 +1725,20 @@ class Path_Description(TokenizeSection):
         paths = Forward()
 
         fork_desc = Group(Suppress(CaselessKeyword("Fork")) +
-            (paths * (0,)).setParseAction(lambda f: f.asList()) +
+            (paths * (0,)).set_parse_action(lambda f: f.asList()) +
             Suppress(CaselessKeyword("Endfork")))
 
         path_pin = (Suppress(CaselessKeyword("Pin")) - Word(printables)("pin"))
-        path_pin.setParseAction(lambda f: IBISNode(f.asDict()))
+        path_pin.set_parse_action(lambda f: IBISNode(f.asDict()))
 
         path_node = Suppress(CaselessKeyword("Node")) - Word(printables)("node")
-        path_node.setParseAction(lambda f: IBISNode(f.asDict()))
+        path_node.set_parse_action(lambda f: IBISNode(f.asDict()))
 
         stub_desc = (
             stubKeyword("Len") +
             Each([ Optional(stubKeyword(k)) for k in [ "L", "R", "C" ] ]) -
             Suppress(Literal("/"))
-        ).setParseAction(lambda f: IBISNode(f.asDict()))
+        ).set_parse_action(lambda f: IBISNode(f.asDict()))
 
         paths << (fork_desc | path_pin | path_node | stub_desc)
         super(Path_Description, self).__init__("Path Description", path_pin - paths * (0,), **kwds)
@@ -1761,7 +1761,7 @@ class Board_Description(Section):
         self += Path_Description()
         self += DictSection("Reference Designator Map",
             Word(printables)("file_name") -
-            restOfLine.setParseAction(lambda f: f[0].strip())("component_name"), asDict=True)
+            restOfLine.set_parse_action(lambda f: f[0].strip())("component_name"), asDict=True)
         self += End("End Board Description")
 
 
