@@ -1205,6 +1205,13 @@ class Model(BaseModel):
                 series += Keyword(p, RealRange(check=positive))
             self += series
 
+        # BIRD ID# 133.1 (Part of IBIS 6.0)
+        c_comp_corner = Section('C Comp Corner')
+        for p in [ "C_comp", "C_comp_pullup", "C_comp_pulldown",
+                "C_comp_power_clamp", "C_comp_gnd_clamp" ]:
+            c_comp_corner += Param(p, RealRange(check=positive))
+        self += c_comp_corner
+
         self += model_spec
         self += receiver_thresholds
         self += DictSection("Add Submodel", oneof("Driving Non-Driving All"))
