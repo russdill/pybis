@@ -58,7 +58,7 @@ class Real(Token):
         self.check = check
 
     def parseImpl(self, instring, loc, doActions=True):
-        tokens = re.split("[^a-zA-Z0-9\.\-\+]+", instring[loc:], 1)
+        tokens = re.split(r"[^a-zA-Z0-9\.\-\+]+", instring[loc:], 1)
         try:
             return loc + len(tokens[0]), self.check(ParseReal(tokens[0]))
         except:
@@ -71,7 +71,7 @@ class Integer(Token):
         self.check = check
 
     def parseImpl(self, instring, loc, doActions=True):
-        tokens = re.split("[^0-9\-\+]+", instring[loc:], 1)
+        tokens = re.split(r"[^0-9\-\+]+", instring[loc:], 1)
         val = tokens[0]
         try:
             return loc + len(val), self.check(int(val))
@@ -135,7 +135,7 @@ class RealRange(Token):
         super(RealRange, self).__init__()
 
     def parseImpl(self, instring, loc, doActions=True):
-        tokens = re.split("([^a-zA-Z0-9\.\-\+]+)", instring[loc:])
+        tokens = re.split(r"([^a-zA-Z0-9\.\-\+]+)", instring[loc:])
         ret = Range()
         intok = True
         for tok in tokens[:self.count]:
